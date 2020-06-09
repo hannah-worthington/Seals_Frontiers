@@ -1,0 +1,14 @@
+Capture histories
+
+0 - missed
+1 - recaptured
+
+
+Mark Histories
+
+5 - cohort year (birth year)
+0 - missed
+1 - recaptured by tag
+2 - recaptured by brand
+
+if both, brand takes presidence
