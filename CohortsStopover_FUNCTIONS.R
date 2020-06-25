@@ -6,11 +6,12 @@
 # Objective: To evaluate the negative log-likelihood of the multiple cohort HMM given a set of parameter values and capture histories
 # Inputs: param - model specific, will be passed to other functions for structuring
 #         X - capture histories, a matrix for each cohort stored in a list
-#         arr.dist - distribution on arrivals, distribution and structure
-#         model - model to be fitted, parameter structure
+#         arr.dist - distribution on arrivals, type and number of mixtures
+#         arr.str - structure for arrivals (shared or cohort)
+#         min.age - minimum age of return (default = 3)
 # Outputs: lik - negative log-likelihood value
 
-likelihood_cohort <- function(param, X, arr.dist, model)  {
+likelihood_cohort <- function(param, X, arr.dist, arr.str, min.age = 3)  {
   
   # define constants
   n.cohorts <- length(X)  # number of cohorts
@@ -23,7 +24,7 @@ likelihood_cohort <- function(param, X, arr.dist, model)  {
   
   # unpack the parameter vector
   param_function <- match.fun(arr.dist)
-  params <- param_function(param, model, n.cohorts, n, K)
+  params <- param_function(param, arr.str, min.age, n.cohorts, K)
   HMM <- HMM.str(params, n.cohorts, K)
   
   # storage variables
@@ -107,41 +108,77 @@ HMM.str <- function(param, n.cohorts, K)  {
 
 ### Functions to unpack the parameter vector
 
-### Function to unpack the parameter vector - normal distribution on arrivals, shared mean and sd, constant capture, constant survival
+### Function to unpack the parameter vector - normal distribution on arrivals, constant capture, constant survival
 
-# Name: onenormalalldiff_constp_constphi
-# Objective: To unpack and transform a vector of parameter values for the multiple cohort stopover model HMM
-# Inputs: param - vector of parameter values
-#               - [n.cohorts] - log mu for arrival distribution, one per cohort
-#               - [n.cohorts] - log sd for arrival distribution, one per cohort
-#               - [1] - logit p, constant capture probability, shared across all cohorts 
-#               - [1] - logit phi, survival probability, shared across all cohorts
-#         n.cohorts - number of cohorts
-#         n - vector of observed number of individuals in each cohort
-#         K - vector of the number of capture occasions for each cohort
+# Name: normal_one
+# Objective: To unpack and transform a vector of parameter values for the cohort stopover HMM model
+# Inputs: param - vector of parameter values, model dependent, order follows:
+#               - arrival distribution parameters (mean (log), sd (log))
+#               - capture probability (logit)
+#               - survival probability (logit)
+#         arr.str - arrivals structure, shared or cohort specific (mean, sd)
 #         min.age - minimum age of return
-# Outputs: mu - means for each cohort
-#          sd - sd for each cohort
+#         n.cohorts - number of cohorts
+#         K - number of capture occasions for each cohort
+# Outputs: mu - mean of arrival distribution for each cohort
+#          sd - sd of arrival distribution for each cohort
 #          beta - arrival probabilities for each cohort
 #          betastar - conditional arrival probabilities for each cohort
-#          p - capture probabilities
-#          phi - survival probabilities
+#          p - capture probability
+#          phi- survival probability
 
-onenormalalldiff_constp_constphi <- function(param, n.cohorts, n, K, min.age = 3)  {
+normal_one <- function(param, arr.str, min.age, n.cohorts, K)  {
   
-  # means
-  normal.means <- exp(param[1:n.cohorts])
+  # mean of arrival distributions
+  if (arr.str[1] == 'shared')  {
+    means <- rep(exp(param[1]), n.cohorts)
+    param <- param[-1]
+  } else if(arr.str[1] == 'cohort')  {
+    means <- exp(param[1:n.cohorts])
+    param <- param[-(1:n.cohorts)]
+  }
   
-  # sds
-  normal.sds <- exp(param[(n.cohorts+1):(2*n.cohorts)])
+  # sd of arrival distributions
+  if (arr.str[2] == 'shared')  {
+    sds <- rep(exp(param[1]), n.cohorts)
+    param <- param[-1]
+  } elseif(arr.str[2] == 'cohort')  {
+    sds <- exp(param[1:n.cohorts])
+    param <- param[-(1:n.cohorts)]
+  }
   
   # arrival probabilities
   beta <- list()
   for (c in 1:n.cohorts)  {
-    beta[[c]] <- onenormalbetas(normal.means[c], normal.sds[c], K[c], min.age)
+    beta[[c]] <- onenormalbetas(means[c], sds[c], K[c], min.age)
   }
   
   # conditional arrival probabilities
-  betastar
+  betastar <- list()
+  for (c in 1:n.cohorts)  {
+    betastar[[c]] <- rep(0, K[c])
+    for (k in 1:K[c])  {
+      if (sum(beta[[c]][k:K[c]]) > 0)  {
+        betastar[[c]][k] <- beta[[c]][k]/sum(beta[[c]][k:K[c]])
+      }
+    }
   }
+  
+  # capture probability (constant)
+  logitp <- param[1]
+  param <- param[-1]
+  pnonzero <- 1/(1+exp(-logitp))
+  p <- list()
+  for (c in 1:n.cohorts)  {
+    p[[c]] <- rep(0, K[c])
+    p[[c]][min.age:K[c]] <- pnonzero
+  }
+  
+  # retention probability
+  phi <- 1/(1+exp(-param))
+  
+  # return all parameters
+  return(list('mu' = means, 'sd' = sds, 'beta' = beta, 'betastar' = betastar, 'p' = p, 'phi' = phi))
 }
+
+
