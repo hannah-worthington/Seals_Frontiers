@@ -182,3 +182,31 @@ normal_one <- function(param, arr.str, min.age, n.cohorts, K)  {
 }
 
 
+
+### Functions to calculate arrival probabilities
+
+### Function to calculate beta probabilities from a normal distribution over the plausible recruitment ages
+
+# Name: onenormalbetas
+# Objective: To calculate the beta probabilities from a truncated normal distribution
+# Inputs: mu - mean of the arrival distribution
+#         sd - sd of the arrival distribution
+#         K - number of occasions
+#         min.age - minimum age of return
+# Outputs: beta - set of beta parameters
+
+onenormalbetas <- function(mu, sd, K, min.age)  {
+  
+  # storage
+  beta <- rep(0, K)
+  
+  # integrate to find probabilities
+  for (k in min.age:K)  {
+    beta[k] <- pnorm(k + 0.5, mu, sd) - pnorm(k - 0.5, mu, sd)
+  }
+  
+  # return the beta probabilities
+  return(beta)
+}
+
+
