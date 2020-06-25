@@ -13,6 +13,8 @@
 
 likelihood_cohort <- function(param, X, arr.dist, arr.str, min.age = 3)  {
   
+  print(param)
+  
   # define constants
   n.cohorts <- length(X)  # number of cohorts
   n <- rep(0, n.cohorts)  # number of individuals in each cohort
@@ -43,10 +45,14 @@ likelihood_cohort <- function(param, X, arr.dist, arr.str, min.age = 3)  {
       }
       # individual contribution
       contrib <- contrib %*% matrix(1, nrow = 3, ncol = 1)
-      # add to likelihood for this cohort
-      lik.partial <- lik.partial + log(contrib)
+      # add to likelihood for this cohort if nonzero
+      if (contrib > 0)  {
+        lik.partial <- lik.partial + log(contrib)
+      } else if (contrib == 0)  {
+        lik.partial <- lik.partial - 10000
+      }
     }
-    # store likelihood value for cohort
+    # store likelihood value for cohort, checking for nonzero
     lik.cohort[c] <- lik.partial
   }
   
@@ -142,7 +148,7 @@ normal_one <- function(param, arr.str, min.age, n.cohorts, K)  {
   if (arr.str[2] == 'shared')  {
     sds <- rep(exp(param[1]), n.cohorts)
     param <- param[-1]
-  } elseif(arr.str[2] == 'cohort')  {
+  } else if(arr.str[2] == 'cohort')  {
     sds <- exp(param[1:n.cohorts])
     param <- param[-(1:n.cohorts)]
   }
@@ -205,6 +211,15 @@ onenormalbetas <- function(mu, sd, K, min.age)  {
     beta[k] <- pnorm(k + 0.5, mu, sd) - pnorm(k - 0.5, mu, sd)
   }
   
+  # truncating, so reweight the probabilities checking that they are nonzero
+  if (sum(beta) > 0)  {
+    beta <- beta/sum(beta)
+  } else if (sum(beta) == 0 & mu < 0)  {
+    beta[1] <- 1
+  } else if (sum(beta) == 0 & mu > K)  {
+    beta[K] <- 1
+  }
+
   # return the beta probabilities
   return(beta)
 }
