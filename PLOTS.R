@@ -1,31 +1,31 @@
 # libraries
 library(ggplot2)
 
-
-
-### produce histograms of observed age at first recapture
-
 # constants
-n_cohorts <- 4
+n.cohorts <- 4
 
 # read in data
 data <- list()
-for (c in 1:n_cohorts)  {
+for (c in 1:n.cohorts)  {
   data[[c]] <- read.csv(paste(getwd(), '/Data/199', c, 'mark.csv', sep=''), 
                         header = T)
 }
 
 # number of individuals and capture occasions in each cohort
-n <- rep(0, n_cohorts)
-K <- rep(0, n_cohorts)
-for (c in 1:n_cohorts)  {
+n <- rep(0, n.cohorts)
+K <- rep(0, n.cohorts)
+for (c in 1:n.cohorts)  {
   n[c] <- length(data[[c]][,1])
   K[c] <- length(data[[c]][1,])
 }
 
+
+
+### produce histograms of observed age at first recapture
+
 # find age at first breeding observation
 age_first <- list()
-for (c in 1:n_cohorts)  {
+for (c in 1:n.cohorts)  {
   age <- rep(0, n[c])
   for (i in 1:n[c])  {
     age[i] <- which(data[[c]][i,] == 1)[1]
