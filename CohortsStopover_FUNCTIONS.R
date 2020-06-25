@@ -6,10 +6,11 @@
 # Objective: To evaluate the negative log-likelihood of the multiple cohort HMM given a set of parameter values and capture histories
 # Inputs: param - model specific, will be passed to other functions for structuring
 #         X - capture histories, a matrix for each cohort stored in a list
-#         model - model to be fitted
+#         arr.dist - distribution on arrivals, distribution and structure
+#         model - model to be fitted, parameter structure
 # Outputs: lik - negative log-likelihood value
 
-likelihood_cohort<- function(param, X, model)  {
+likelihood_cohort <- function(param, X, arr.dist, model)  {
   
   # define constants
   n.cohorts <- length(X)  # number of cohorts
@@ -21,8 +22,8 @@ likelihood_cohort<- function(param, X, model)  {
   }
   
   # unpack the parameter vector
-  param_function <- match.fun(model)
-  params <- param_function(param, n.cohorts, n, K)
+  param_function <- match.fun(arr.dist)
+  params <- param_function(param, model, n.cohorts, n, K)
   HMM <- HMM.str(params, n.cohorts, K)
   
   # storage variables
