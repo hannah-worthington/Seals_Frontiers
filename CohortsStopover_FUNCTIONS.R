@@ -212,11 +212,13 @@ onenormalbetas <- function(mu, sd, K, min.age)  {
   }
   
   # truncating, so reweight the probabilities checking that they are nonzero
-  if (sum(beta) > 0)  {
-    beta <- beta/sum(beta)
-  } else if (sum(beta) == 0 & mu < 0)  {
+#  if (sum(beta) > 0)  {
+  truncate <- pnorm(K + 0.5, mu, sd) - pnorm(min.age - 0.5, mu, sd)
+  if (truncate > 0)  {
+    beta <- beta/truncate
+  } else if (truncate == 0 & mu < 0)  {
     beta[1] <- 1
-  } else if (sum(beta) == 0 & mu > K)  {
+  } else if (truncate == 0 & mu > K)  {
     beta[K] <- 1
   }
 
