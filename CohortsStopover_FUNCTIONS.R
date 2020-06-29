@@ -226,3 +226,39 @@ onenormalbetas <- function(mu, sd, K, min.age)  {
 }
 
 
+
+### Function to calculate beta probabilities from a mixture of two normal distributions over the plausible recruitment ages
+
+# Name: twonormalbetas
+# Objective: To calculate the beta probabilities from a mixture of two truncated normal distributions
+# Inputs: mu - means vector for the two normals that form the arrival distribution
+#         sd - sds vector for the two normals that form the arrival distribution
+#         w - mixture proportion for distribution 1
+#         K - number of occasions
+#         min.age - minimum age of return
+# Outputs: beta - set of beta parameters
+
+twonormalbetas <- function(mu, sd, w, K, min.age)  {
+  
+  # storage
+  mix.1 <- rep(0, K)
+  mix.2 <- rep(0, K)
+  
+  # find the separate truncated mixture distributions
+  mix.1 <- onenormalbetas(mu[1], sd[1], K, min.age)
+  mix.2 <- onenormalbetas(mu[2], sd[2], K, min.age)
+  
+  # create mixture
+  beta <- w*mix.1 + (1-w)*mix.2
+  
+  # check the probabilities sum to one
+  total <- sum(beta)
+  if (total > 0)  {
+    beta <- beta/total
+  } 
+  
+  # return the beta probabilities
+  return(beta)
+}
+
+
