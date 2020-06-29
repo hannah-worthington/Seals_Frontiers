@@ -114,49 +114,81 @@ HMM.str <- function(param, n.cohorts, K)  {
 
 ### Functions to unpack the parameter vector
 
-### Function to unpack the parameter vector - normal distribution on arrivals, constant capture, constant survival
+### Function to unpack the parameter vector - normal distribution(s) on arrivals, constant capture, constant survival
 
-# Name: normal_one
+# Name: normal.arr
 # Objective: To unpack and transform a vector of parameter values for the cohort stopover HMM model
 # Inputs: param - vector of parameter values, model dependent, order follows:
-#               - arrival distribution parameters (mean (log), sd (log))
+#               - arrival distribution parameters (mean(s) (log), sd(s) (log), w (mixture parameter(s)))
 #               - capture probability (logit)
 #               - survival probability (logit)
-#         arr.str - arrivals structure, shared or cohort specific (mean, sd)
+#         arr.str - arrivals structure, shared or cohort specific (list with vector for each of mean, sd, w (when required))
 #         min.age - minimum age of return
 #         n.cohorts - number of cohorts
 #         K - number of capture occasions for each cohort
-# Outputs: mu - mean of arrival distribution for each cohort
-#          sd - sd of arrival distribution for each cohort
+# Outputs: mu - mean(s) of arrival distribution for each cohort
+#          sd - sd(s) of arrival distribution for each cohort
+#          w - mixture proportion (1 for single distribution)
 #          beta - arrival probabilities for each cohort
 #          betastar - conditional arrival probabilities for each cohort
-#          p - capture probability
+#          p - capture probability, time structured to permit structural zeros
 #          phi- survival probability
 
-normal_one <- function(param, arr.str, min.age, n.cohorts, K)  {
+normal_arr <- function(param, arr.str, min.age, n.cohorts, K)  {
   
-  # mean of arrival distributions
-  if (arr.str[1] == 'shared')  {
-    means <- rep(exp(param[1]), n.cohorts)
-    param <- param[-1]
-  } else if(arr.str[1] == 'cohort')  {
-    means <- exp(param[1:n.cohorts])
-    param <- param[-(1:n.cohorts)]
+  # number of mixtures taken from length of first object in arr.str list
+  n.mixtures <- length(arr.str[[1]])
+  
+  # storage
+  means <- matrix(0, nrow = n.mixtures, ncol = n.cohorts)
+  sds <- matrix(0, nrow = n.mixtures, ncol = n.cohorts)
+  
+  # mean(s) of arrival distributions
+  for (m in 1:n.mixtures)  {
+    if (arr.str[[1]][m] == 'shared')  {
+      means[m,] <- rep(exp(param[1]), n.cohorts)
+      param <- param[-1]
+    } else if(arr.str[[1]][m] == 'cohort')  {
+      means[m,] <- exp(param[1:n.cohorts])
+      param <- param[-(1:n.cohorts)]
+    }
   }
   
   # sd of arrival distributions
-  if (arr.str[2] == 'shared')  {
-    sds <- rep(exp(param[1]), n.cohorts)
-    param <- param[-1]
-  } else if(arr.str[2] == 'cohort')  {
-    sds <- exp(param[1:n.cohorts])
-    param <- param[-(1:n.cohorts)]
+  for (m in 1:n.mixtures)  {
+    if (arr.str[[2]][m] == 'shared')  {
+      sds[m,] <- rep(exp(param[1]), n.cohorts)
+      param <- param[-1]
+    } else if (arr.str[[2]][m] == 'cohort')  {
+      sds[m,] <- exp(param[1:n.cohorts])
+      param <- param[-(1:n.cohorts)]
+    }
+  }
+  
+  # mixture proportions if needed
+  if (n.mixtures >= 2)  {
+    w <- rep(0, n.cohorts)
+    for (m in 1:(n.mixtures - 1))  {
+      if (arr.str[[3]][m] == 'shared')  {
+        w[m,] <- rep(1/(1 + exp(-param[1])), n.cohorts)
+        param <- param[-1]
+      } else if (arr.str[[3]][m] == 'cohort')  {
+        w[m,] <- 1/(1 + exp(-param[1:n.cohorts]))
+        param <- param[-(1:n.cohorts)]
+      }
+    }
+  } else if (n.mixtures == 1)  {
+    w <- 1
   }
   
   # arrival probabilities
   beta <- list()
   for (c in 1:n.cohorts)  {
-    beta[[c]] <- onenormalbetas(means[c], sds[c], K[c], min.age)
+    if (n.mixtures == 1)  {
+      beta[[c]] <- onenormalbetas(means[,c], sds[,c], K[c], min.age)
+    } else if (n.mixtures == 2)  {
+      beta[[c]] <- twonormalbetas(means[,c], sds[,c], w[,c], K[c], min.age)
+    }
   }
   
   # conditional arrival probabilities
@@ -184,7 +216,7 @@ normal_one <- function(param, arr.str, min.age, n.cohorts, K)  {
   phi <- 1/(1+exp(-param))
   
   # return all parameters
-  return(list('mu' = means, 'sd' = sds, 'beta' = beta, 'betastar' = betastar, 'p' = p, 'phi' = phi))
+  return(list('mu' = means, 'sd' = sds, 'w' = w, 'beta' = beta, 'betastar' = betastar, 'p' = p, 'phi' = phi))
 }
 
 
