@@ -59,8 +59,12 @@ res.4 <- normal_one(opt.4$estimate, c('cohort', 'cohort'), min.age, n.cohorts, K
 AIC <- rbind(AIC, data.frame('arrivals model' = 'one normal cohort mean and sd', 'AIC' = 2*opt.4$minimum + 2*length(param.4)))
 
 
-param.test <- c(21.13785, 104.39981, -196.93070, 402.59331)
-test <- normal_one(param.1, c('shared', 'shared'), 3, 4, K)
-test2 <- onenormalbetas(exp(res.1$mu[1]), exp(res.1$sd[1]), K[1], 3)
-test3 <- HMM.str(test, n.cohorts, K)
-test4 <- likelihood_cohort(param.1, data, arr.dist = normal_one, arr.str = c('shared', 'shared'))
+
+### Mixture of two normals for recruitment, constant p, constant phi
+
+### model 5
+### two normal distributions, mean, sd and mixture proportion all shared
+param.4 <- c(rep(0, n.cohorts), rep(0, n.cohorts), 0, 0)
+opt.4 <- nlm(likelihood_cohort, param.4, X = data, arr.dist = normal_one, arr.str = c('cohort', 'cohort'))
+res.4 <- normal_one(opt.4$estimate, c('cohort', 'cohort'), min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'one normal cohort mean and sd', 'AIC' = 2*opt.4$minimum + 2*length(param.4)))
