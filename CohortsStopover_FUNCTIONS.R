@@ -142,7 +142,8 @@ normal_arr <- function(param, arr.str, min.age, n.cohorts, K)  {
   # storage
   means <- matrix(0, nrow = n.mixtures, ncol = n.cohorts)
   sds <- matrix(0, nrow = n.mixtures, ncol = n.cohorts)
-  
+  w <- matrix(0, nrow = n.mixtures - 1, ncol = n.cohorts)
+ 
   # mean(s) of arrival distributions
   for (m in 1:n.mixtures)  {
     if (arr.str[[1]][m] == 'shared')  {
@@ -167,7 +168,6 @@ normal_arr <- function(param, arr.str, min.age, n.cohorts, K)  {
   
   # mixture proportions if needed
   if (n.mixtures >= 2)  {
-    w <- rep(0, n.cohorts)
     for (m in 1:(n.mixtures - 1))  {
       if (arr.str[[3]][m] == 'shared')  {
         w[m,] <- rep(1/(1 + exp(-param[1])), n.cohorts)
@@ -212,7 +212,7 @@ normal_arr <- function(param, arr.str, min.age, n.cohorts, K)  {
     p[[c]][min.age:K[c]] <- pnonzero
   }
   
-  # retention probability
+  # retention probability (constant)
   phi <- 1/(1+exp(-param))
   
   # return all parameters
