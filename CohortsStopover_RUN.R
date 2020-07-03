@@ -103,3 +103,141 @@ str.8 <- list(c('shared', 'shared'), c('shared', 'shared'), 'cohort')
 opt.8 <- nlm(likelihood_cohort, param.8, X = data, arr.dist = normal_arr, arr.str = str.8)
 res.8 <- normal_arr(opt.8$estimate, str.8, min.age, n.cohorts, K)
 AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals shared means and sds', 'AIC' = 2*opt.8$minimum + 2*length(param.8)))
+
+
+### model 9
+### two normal distributions, both means cohort dependent
+param.9 <- c(rep(0, 2*n.cohorts), rep(0, 2), 0, 0, 0)
+param.9 <- opt.9$estimate  # max iterations exceeded, restart at current values
+str.9 <- list(c('cohort', 'cohort'), c('shared', 'shared'), 'shared')
+opt.9 <- nlm(likelihood_cohort, param.9, X = data, arr.dist = normal_arr, arr.str = str.9)
+res.9 <- normal_arr(opt.9$estimate, str.9, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals shared sds and mixture proportion', 'AIC' = 2*opt.9$minimum + 2*length(param.9)))
+
+
+### model 10
+### two normal distributions, one normal (mean and sd) cohort dependent
+param.10 <- c(rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, 0, 0, 0)
+str.10 <- list(c('cohort', 'shared'), c('cohort', 'shared'), 'shared')
+opt.10 <- nlm(likelihood_cohort, param.10, X = data, arr.dist = normal_arr, arr.str = str.10)
+res.10 <- normal_arr(opt.10$estimate, str.10, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals one shared normal and mixture proportion', 'AIC' = 2*opt.10$minimum + 2*length(param.10)))
+
+
+### model 11
+### two normal distributions, one mean and mixture proportions cohort dependent
+param.11 <- c(rep(0, n.cohorts), 0, rep(0, 2), rep(0, n.cohorts), 0, 0)
+param.11 <- opt.11$estimate  # max iterations exceeded, restart at current values
+str.11 <- list(c('cohort', 'shared'), c('shared', 'shared'), 'cohort')
+opt.11 <- nlm(likelihood_cohort, param.11, X = data, arr.dist = normal_arr, arr.str = str.11)
+res.11 <- normal_arr(opt.11$estimate, str.11, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals one shared mean and both sds', 'AIC' = 2*opt.11$minimum + 2*length(param.11)))
+
+
+### model 12
+### two normal distributions, both sds cohort dependent
+param.12 <- c(rep(0, 2), rep(0, 2*n.cohorts), 0, 0, 0)
+param.12 <- opt.12$estimate  # max iterations exceeded, restart at current value
+str.12 <- list(c('shared', 'shared'), c('cohort', 'cohort'), 'shared')
+opt.12 <- nlm(likelihood_cohort, param.12, X = data, arr.dist = normal_arr, arr.str = str.12)
+res.12 <- normal_arr(opt.12$estimate, str.12, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals shared means and mixture proportion', 'AIC' = 2*opt.12$minimum + 2*length(param.12)))
+
+
+### model 13
+### two normal distributions, one sd and mixture proportions cohort dependent
+param.13 <- c(rep(0, 2), rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, 0)
+param.13 <- opt.13$estimate  # max iterations exceeded, restart at current values
+str.13 <- list(c('shared', 'shared'), c('cohort', 'shared'), 'cohort')
+opt.13 <- nlm(likelihood_cohort, param.13, X = data, arr.dist = normal_arr, arr.str = str.13)
+res.13 <- normal_arr(opt.13$estimate, str.13, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals shared means and one sd', 'AIC' = 2*opt.13$minimum + 2*length(param.13)))
+
+
+### model 14
+### two normal distributions, both means and one sd cohort dependent
+param.14 <- c(rep(0, 2*n.cohorts), rep(0, n.cohorts), 0, 0, 0, 0)
+str.14 <- list(c('cohort', 'cohort'), c('cohort', 'shared'), 'shared')
+opt.14 <- nlm(likelihood_cohort, param.14, X = data, arr.dist = normal_arr, arr.str = str.14)
+res.14 <- normal_arr(opt.14$estimate, str.14, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals one shared sd and mixture proportion', 'AIC' = 2*opt.14$minimum + 2*length(param.14)))
+
+
+### model 15
+### two normal distributions, both means and mixture proportions cohort dependent
+param.15 <- c(rep(0, 2*n.cohorts), rep(0, 2), rep(0, n.cohorts), 0, 0)
+param.15 <- opt.15$estimate  # max iterations exceeded, restart at current values
+str.15 <- list(c('cohort', 'cohort'), c('shared', 'shared'), 'cohort')
+opt.15 <- nlm(likelihood_cohort, param.15, X = data, arr.dist = normal_arr, arr.str = str.15)
+res.15 <- normal_arr(opt.15$estimate, str.15, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals shared sds', 'AIC' = 2*opt.15$minimum + 2*length(param.15)))
+
+
+### model 16
+### two normal distributions, one mean and both sds cohort dependent
+param.16 <- c(rep(0, n.cohorts), 0, rep(0, 2*n.cohorts), 0, 0, 0)
+param.16 <- opt.16$estimate  # max iterations exceeded, restart at current values
+str.16 <- list(c('cohort', 'shared'), c('cohort', 'cohort'), 'shared')
+opt.16 <- nlm(likelihood_cohort, param.16, X = data, arr.dist = normal_arr, arr.str = str.16)
+res.16 <- normal_arr(opt.16$estimate, str.16, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals one shared mean and mixture proportions', 'AIC' = 2*opt.16$minimum + 2*length(param.16)))
+
+
+### model 17
+### two normal distributions, one normal (mean and sd) and mixture proportions cohort dependent
+param.17 <- c(rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, 0)
+param.17 <- opt.17$estimate  # max iterations exceeded, restart at current values
+str.17 <- list(c('cohort', 'shared'), c('cohort', 'shared'), 'cohort')
+opt.17 <- nlm(likelihood_cohort, param.17, X = data, arr.dist = normal_arr, arr.str = str.17)
+res.17 <- normal_arr(opt.17$estimate, str.17, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals one shared normal', 'AIC' = 2*opt.17$minimum + 2*length(param.17)))
+
+
+### model 18
+### two normal distributions, both sds and mixture proportions cohort dependent
+param.18 <- c(rep(0, 2), rep(0, 2*n.cohorts), rep(0, n.cohorts), 0, 0)
+param.18 <- opt.18$estimate  # max iterations exceeded, restart at current values
+str.18 <- list(c('shared', 'shared'), c('cohort', 'cohort'), 'cohort')
+opt.18 <- nlm(likelihood_cohort, param.18, X = data, arr.dist = normal_arr, arr.str = str.18)
+res.18 <- normal_arr(opt.18$estimate, str.18, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals shared means', 'AIC' = 2*opt.18$minimum + 2*length(param.18)))
+
+
+### model 19
+### two normal distributions, both normals (means and sds) cohort dependent
+param.19 <- c(rep(0, 2*n.cohorts), rep(0, 2*n.cohorts), 0, 0, 0)
+param.19 <- opt.19$estimate  # max iterations exceeded, restart at current values
+str.19 <- list(c('cohort', 'cohort'), c('cohort', 'cohort'), 'shared')
+opt.19 <- nlm(likelihood_cohort, param.19, X = data, arr.dist = normal_arr, arr.str = str.19)
+res.19 <- normal_arr(opt.19$estimate, str.19, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals shared mixture proportions', 'AIC' = 2*opt.19$minimum + 2*length(param.19)))
+
+
+### model 20
+### two normal distributions, both means, one sd and mixture proportions cohort dependent
+param.20 <- c(rep(0, 2*n.cohorts), rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, 0)
+param.20 <- opt.20$estimate  # max iterations exceeded, restart at current values
+str.20 <- list(c('cohort', 'cohort'), c('cohort', 'shared'), 'cohort')
+opt.20 <- nlm(likelihood_cohort, param.20, X = data, arr.dist = normal_arr, arr.str = str.20)
+res.20 <- normal_arr(opt.20$estimate, str.20, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals one shared sd', 'AIC' = 2*opt.20$minimum + 2*length(param.20)))
+
+
+### model 21
+### two normal distributions, one mean, both sds and mixture proportions cohort dependent
+param.21 <- c(rep(0, n.cohorts), 0, rep(0, 2*n.cohorts), rep(0, n.cohorts), 0, 0)
+param.21 <- opt.21$estimate  # max iterations exceeded, restart at current values
+str.21 <- list(c('cohort', 'shared'), c('cohort', 'cohort'), 'cohort')
+opt.21 <- nlm(likelihood_cohort, param.21, X = data, arr.dist = normal_arr, arr.str = str.21)
+res.21 <- normal_arr(opt.21$estimate, str.21, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals one shared mean', 'AIC' = 2*opt.21$minimum + 2*length(param.21)))
+
+
+### model 22
+### two normal distributions, both normals (means and sds) and mixture proportions cohort dependent
+param.22 <- c(rep(0, 2*n.cohorts), rep(0, 2*n.cohorts), rep(0, n.cohorts), 0, 0)
+param.22 <- opt.22$estimate  # max iterations exceeded, restart at current values
+str.22 <- list(c('cohort', 'cohort'), c('cohort', 'cohort'), 'cohort')
+opt.22 <- nlm(likelihood_cohort, param.22, X = data, arr.dist = normal_arr, arr.str = str.22)
+res.22 <- normal_arr(opt.22$estimate, str.22, min.age, n.cohorts, K)
+AIC <- rbind(AIC, data.frame('arrivals model' = 'two normals arrivals cohort dependent', 'AIC' = 2*opt.22$minimum + 2*length(param.22)))
