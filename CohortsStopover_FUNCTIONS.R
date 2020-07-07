@@ -25,8 +25,7 @@ likelihood_cohort <- function(param, X, arr.dist, arr.str, min.age = 3)  {
   }
   
   # unpack the parameter vector
-  param_function <- match.fun(arr.dist)
-  params <- param_function(param, arr.str, min.age, n.cohorts, K)
+  params <- unpack_param(param, arr.dist, arr.str, min.age, n.cohorts, K)
   HMM <- HMM.str(params, n.cohorts, K)
   
   # storage variables
@@ -112,29 +111,31 @@ HMM.str <- function(param, n.cohorts, K)  {
   
 
 
-### Functions to unpack the parameter vector
+### Function to unpack the parameter vector
+### Options: normal distribution(s) on arrivals, constant capture, constant survival
+### Options: log-normal distribution(s) on arrivals, constant capture, constant survival
 
-### Function to unpack the parameter vector - normal distribution(s) on arrivals, constant capture, constant survival
-
-# Name: normal.arr
+# Name: unpack_param
 # Objective: To unpack and transform a vector of parameter values for the cohort stopover HMM model
-# Inputs: param - vector of parameter values, model dependent, order follows:
-#               - arrival distribution parameters (mean(s) (log), sd(s) (log), w (mixture parameter(s)))
+# Inputs: param - vector of parameter values, model dependent:
+#               - For normal distribution(s): arrival distribution parameters (mean(s) (log), sd(s) (log), w (mixture parameter(s), logit))
+#               - For log-normal distribution(s): arrival distribution parameters (mean(s), sd(s) (log), w (mixture parameter(s), logit))
 #               - capture probability (logit)
 #               - survival probability (logit)
-#         arr.str - arrivals structure, shared or cohort specific (list with vector for each of mean, sd, w (when required))
+#         arr.dist - distribution (normal or log-normal)
+#         arr.str - arrivals structure, shared or cohort specific (list with vector for each of mean, sd, w (when required) for both normal and log-normal)
 #         min.age - minimum age of return
 #         n.cohorts - number of cohorts
 #         K - number of capture occasions for each cohort
 # Outputs: mu - mean(s) of arrival distribution for each cohort
 #          sd - sd(s) of arrival distribution for each cohort
-#          w - mixture proportion (1 for single distribution)
+#          w - mixture proportion for first mixture (1 for single distribution)
 #          beta - arrival probabilities for each cohort
 #          betastar - conditional arrival probabilities for each cohort
 #          p - capture probability, time structured to permit structural zeros
 #          phi- survival probability
 
-normal_arr <- function(param, arr.str, min.age, n.cohorts, K)  {
+unpack_param <- function(param, arr.dist, arr.str, min.age, n.cohorts, K)  {
   
   # number of mixtures taken from length of first object in arr.str list
   n.mixtures <- length(arr.str[[1]])
@@ -144,14 +145,29 @@ normal_arr <- function(param, arr.str, min.age, n.cohorts, K)  {
   sds <- matrix(0, nrow = n.mixtures, ncol = n.cohorts)
   w <- matrix(0, nrow = n.mixtures - 1, ncol = n.cohorts)
  
-  # mean(s) of arrival distributions
-  for (m in 1:n.mixtures)  {
-    if (arr.str[[1]][m] == 'shared')  {
-      means[m,] <- rep(exp(param[1]), n.cohorts)
-      param <- param[-1]
-    } else if(arr.str[[1]][m] == 'cohort')  {
-      means[m,] <- exp(param[1:n.cohorts])
-      param <- param[-(1:n.cohorts)]
+  # mean(s) of arrival distributions for normal distribution(s)
+  if (arr.dist == 'normal')  {
+    for (m in 1:n.mixtures)  {
+      if (arr.str[[1]][m] == 'shared')  {
+        means[m,] <- rep(exp(param[1]), n.cohorts)
+        param <- param[-1]
+      } else if (arr.str[[1]][m] == 'cohort')  {
+        means[m,] <- exp(param[1:n.cohorts])
+        param <- param[-(1:n.cohorts)]
+      }
+    }
+  }
+  
+  # mean(s) of arrival distributions for log-normal distribution(s)
+  if (arr.dist == 'lognormal')  {
+    for (m in 1:n.mixtures)  {
+      if (arr.str[[1]][m] == 'shared')  {
+        means[m,] <- rep(param[1], n.cohorts)
+        param <- param[-1]
+      } else if (arr.str[[1]][m] == 'cohort')  {
+        means[m,] <- param[1:n.cohorts]
+        param <- param[-(1:n.cohorts)]
+      }
     }
   }
   
@@ -183,11 +199,13 @@ normal_arr <- function(param, arr.str, min.age, n.cohorts, K)  {
   
   # arrival probabilities
   beta <- list()
+  text.cohorts <- ifelse(n.cohorts == 1, 'one', 'two')
+  beta_fun <- match.fun(paste(text.cohorts, 'arr.dist', 'betas', sep=''))
   for (c in 1:n.cohorts)  {
     if (n.mixtures == 1)  {
-      beta[[c]] <- onenormalbetas(means[,c], sds[,c], K[c], min.age)
+      beta[[c]] <- beta_fun(means[,c], sds[,c], K[c], min.age)
     } else if (n.mixtures == 2)  {
-      beta[[c]] <- twonormalbetas(means[,c], sds[,c], w[,c], K[c], min.age)
+      beta[[c]] <- beta_fun(means[,c], sds[,c], w[,c], K[c], min.age)
     }
   }
   
@@ -218,6 +236,7 @@ normal_arr <- function(param, arr.str, min.age, n.cohorts, K)  {
   # return all parameters
   return(list('mu' = means, 'sd' = sds, 'w' = w, 'beta' = beta, 'betastar' = betastar, 'p' = p, 'phi' = phi))
 }
+
 
 
 
@@ -259,6 +278,42 @@ onenormalbetas <- function(mu, sd, K, min.age)  {
 
 
 
+### Function to calculate beta probabilities from a log-normal distribution over the plausible recruitment ages
+
+# Name: onelognormalbetas
+# Objective: To calculate the beta probabilities from a truncated log-normal distribution
+# Inputs: mu - mean of the arrival distribution (log-scale)
+#         sd - sd of the arrival distribution (log-scale)
+#         K - number of occasions
+#         min.age - minimum age of return
+# Outputs: beta - set of beta parameters
+
+onelognormalbetas <- function(mu, sd, K, min.age)  {
+  
+  # storage
+  beta <- rep(0, K)
+  
+  # integrate to find probabilities
+  for (k in min.age:K)  {
+    beta[k] <- plnorm(k + 0.5, mu, sd) - plnorm(k - 0.5, mu, sd)
+  }
+  
+  # truncating, so reweight the probabilities checking that they are nonzero
+  truncate <- plnorm(K + 0.5, mu, sd) - plnorm(min.age - 0.5, mu, sd)
+  if (truncate > 0)  {
+    beta <- beta/truncate
+  } else if (truncate == 0 & mu < 0)  {
+    beta[1] <- 1
+  } else if (truncate == 0 & mu > K)  {
+    beta[K] <- 1
+  }
+  
+  # return the beta probabilities
+  return(beta)
+}
+
+
+
 ### Function to calculate beta probabilities from a mixture of two normal distributions over the plausible recruitment ages
 
 # Name: twonormalbetas
@@ -271,10 +326,6 @@ onenormalbetas <- function(mu, sd, K, min.age)  {
 # Outputs: beta - set of beta parameters
 
 twonormalbetas <- function(mu, sd, w, K, min.age)  {
-  
-  # storage
-  mix.1 <- rep(0, K)
-  mix.2 <- rep(0, K)
   
   # find the separate truncated mixture distributions
   mix.1 <- onenormalbetas(mu[1], sd[1], K, min.age)
@@ -294,3 +345,33 @@ twonormalbetas <- function(mu, sd, w, K, min.age)  {
 }
 
 
+
+### Function to calculate beta probabilities from a mixture of two log-normal distributions over the plausible recruitment ages
+
+# Name: twolognormalbetas
+# Objective: To calculate the beta probabilities from a mixture of two truncated log-normal distributions
+# Inputs: mu - means vector for the two log-normals that form the arrival distribution
+#         sd - sds vector for the two log-normals that form the arrival distribution
+#         w - mixture proportion for distribution 1
+#         K - number of occasions
+#         min.age - minimum age of return
+# Outputs: beta - set of beta parameters
+
+twolognormalbetas <- function(mu, sd, w, K, min.age)  {
+  
+  # find the separate truncated mixture distributions
+  mix.1 <- onelognormalbetas(mu[1], sd[1], K, min.age)
+  mix.2 <- onelognormalbetas(mu[2], sd[2], K, min.age)
+  
+  # create mixture
+  beta <- w*mix.1 + (1-w)*mix.2
+  
+  # check the probabilities sum to one
+  total <- sum(beta)
+  if (total > 0)  {
+    beta <- beta/total
+  }
+  
+  # return the beta probabilities
+  return(beta)
+}
