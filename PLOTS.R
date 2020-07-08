@@ -68,7 +68,7 @@ ggplot(data = age.plot) +
 ### Produce plots from CohortsStopover_RUN model results
 
 # model number from CohortsStopover_RUN
-model <-26
+model <- 26
 
 # create data for plotting
 res <- eval(as.name(paste('res', model, sep='.')))
