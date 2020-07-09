@@ -275,6 +275,7 @@ str.26 <- list(c('shared', 'shared'), c('shared', 'shared'), 'cohort')
 opt.26 <- nlm(likelihood_cohort, param.26, X = data, arr.dist = 'lognormal', arr.str = str.26)
 res.26 <- unpack_param(opt.26$estimate, 'lognormal', str.26, min.age, n.cohorts, K)
 AIC.26 <- 2*opt.26$minimum + 2*length(param.26)
+CIs.26 <- bootstrap_fn(999, param.26, data, 'lognormal', str.26)
 
 
 ### model 27
