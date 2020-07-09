@@ -11,7 +11,7 @@
 
 likelihood_cohort <- function(param, X, arr.dist, arr.str, min.age = 3)  {
   
-  print(param)
+  # print(param)
   
   # define constants
   n.cohorts <- length(X)  # number of cohorts
@@ -143,71 +143,71 @@ unpack_param <- function(param, arr.dist, arr.str, min.age, n.cohorts, K)  {
   sds <- matrix(0, nrow = n.mixtures, ncol = n.cohorts)
   w <- matrix(0, nrow = n.mixtures - 1, ncol = n.cohorts)
   res <- list()
+  names <- c()
  
   # mean(s) of arrival distributions for normal distribution(s)
   if (arr.dist == 'normal')  {
     for (m in 1:n.mixtures)  {
-      name <- paste('mu', m, sep='')
+      names <- c(names, paste('mu', m, sep = ''))
       if (arr.str[[1]][m] == 'shared')  {
         mean <- exp(param[1])
-        append(res, mean)
         means[m,] <- rep(mean, n.cohorts)
         param <- param[-1]
       } else if (arr.str[[1]][m] == 'cohort')  {
         mean <- exp(param[1:n.cohorts])
-        res <- c(res, mean)
         means[m,] <- mean
         param <- param[-(1:n.cohorts)]
       }
+      res <- c(res, list(mean))
     }
   }
   
   # mean(s) of arrival distributions for log-normal distribution(s)
   if (arr.dist == 'lognormal')  {
     for (m in 1:n.mixtures)  {
+      names <- c(names, paste('mu', m, sep = ''))
       if (arr.str[[1]][m] == 'shared')  {
         mean <- param[1]
-        res <- c(res, mean)
         means[m,] <- rep(mean, n.cohorts)
         param <- param[-1]
       } else if (arr.str[[1]][m] == 'cohort')  {
         mean <- param[1:n.cohorts]
-        res <- c(res, mean)
         means[m,] <- mean
         param <- param[-(1:n.cohorts)]
       }
+      res <- c(res, list(mean))
     }
   }
   
   # sd of arrival distributions
   for (m in 1:n.mixtures)  {
+    names <- c(names, paste('sd', m, sep = ''))
     if (arr.str[[2]][m] == 'shared')  {
       sd <- exp(param[1])
-      res <- c(res, sd)
       sds[m,] <- rep(sd, n.cohorts)
       param <- param[-1]
     } else if (arr.str[[2]][m] == 'cohort')  {
       sd <- exp(param[1:n.cohorts])
-      res <- c(res, sd)
       sds[m,] <- sd
       param <- param[-(1:n.cohorts)]
     }
+    res <- c(res, list(sd))
   }
   
   # mixture proportions if needed
   if (n.mixtures >= 2)  {
     for (m in 1:(n.mixtures - 1))  {
+      names <- c(names, paste('w', m, sep = ''))
       if (arr.str[[3]][m] == 'shared')  {
-        w <- 1/(1 + exp(-param[1]))
-        res <- c(res, w)
-        w[m,] <- rep(w, n.cohorts)
+        mix <- 1/(1 + exp(-param[1]))
+        w[m,] <- rep(mix, n.cohorts)
         param <- param[-1]
       } else if (arr.str[[3]][m] == 'cohort')  {
-        w <- 1/(1 + exp(-param[1:n.cohorts]))
-        res <- c(res, w)
-        w[m,] <- w
+        mix <- 1/(1 + exp(-param[1:n.cohorts]))
+        w[m,] <- mix
         param <- param[-(1:n.cohorts)]
       }
+      res <- c(res, list(mix))
     }
   } else if (n.mixtures == 1)  {
     w <- 1
@@ -237,9 +237,10 @@ unpack_param <- function(param, arr.dist, arr.str, min.age, n.cohorts, K)  {
   }
   
   # capture probability (constant)
-  logitp <- param[1]
+  pnonzero <- 1/(1 + exp(-param[1]))
   param <- param[-1]
-  pnonzero <- 1/(1+exp(-logitp))
+  names <- c(names, 'p')
+  res <- c(res, list(pnonzero))
   p <- list()
   for (c in 1:n.cohorts)  {
     p[[c]] <- rep(0, K[c])
@@ -247,10 +248,15 @@ unpack_param <- function(param, arr.dist, arr.str, min.age, n.cohorts, K)  {
   }
   
   # retention probability (constant)
-  phi <- 1/(1+exp(-param))
+  phi <- 1/(1 + exp(-param))
+  names <- c(names, 'phi')
+  res <- c(res, list(phi))
+  
+  # add names to parameter list
+  names(res) <- names
   
   # return all parameters
-  return(list('mu' = means, 'sd' = sds, 'w' = w, 'beta' = beta, 'betastar' = betastar, 'p' = p, 'phi' = phi))
+  return(c(list('mu' = means, 'sd' = sds, 'w' = w, 'beta' = beta, 'betastar' = betastar, 'p' = p, 'phi' = phi), 'values' = list(res)))
 }
 
 
@@ -454,13 +460,19 @@ bootstrap_fn <- function(nboot, param, X, arr.dist, arr.str, min.age = 3, alpha 
   n.mixtures <- length(arr.str[[1]])
   
   # storage
-  bootres <- matrix(0, nrow = nboot + 1, ncol = length(param))
+  # bootres <- matrix(0, nrow = nboot + 1, ncol = length(param))
+  bootCI <- list()
+  betaCI <- list()
   
   # optimise original data
   opt <- nlm(likelihood_cohort, param, X = X, arr.dist = arr.dist, arr.str = arr.str)
-  bootres[1,] <- opt$estimate
+  while (opt$iterations == 100)  {
+    opt <- nlm(likelihood_cohort, opt$estimate, X = data, arr.dist = arr.dist, arr.str = arr.str)
+  }
+  # bootres[1,] <- opt$estimate
   unpack <- unpack_param(opt$estimate, arr.dist, arr.str, min.age, n.cohorts, K)
-  
+  values <- unpack$values
+  beta <- unpack$beta
   
   # run bootstrap
   for (b in 1:nboot)  {
@@ -478,14 +490,28 @@ bootstrap_fn <- function(nboot, param, X, arr.dist, arr.str, min.age = 3, alpha 
     }
     
     # store results
-    bootres[b + 1,] <- bootopt$estimate
-    write.table(bootres, 'bootres.txt', col.names = F, row.names = F)
-  }
-  
-  # return
-  return(bootres)
+    # bootres[b + 1,] <- bootopt$estimate
+    # write.table(bootres, 'bootres.txt', col.names = F, row.names = F)
+    
+    # unpack the estimates and store
+    unpack.boot <- unpack_param(bootopt$estimate, arr.dist, arr.str, min.age, n.cohorts, K)
+    for (i in 1:length(values))  {
+      values[[i]] <- rbind(values[[i]], unpack.boot$values[[i]])
+    }
+    for (c in 1:n.cohorts)  {
+      beta[[c]] <- rbind(beta[[c]], unpack.boot$beta[[c]])
     }
   }
   
+  # find confidence intervals
+  for (i in 1:length(values)) {
+    bootCI[[i]] <- apply(values[[i]], 2, quantile, probs = c(alpha/2, 1 - (alpha/2)))
+  }
+  names(bootCI) <- names(values)
+  for (c in 1:n.cohorts)  {
+    betaCI[[c]] <- apply(beta[[c]], 2, quantile, probs = c(alpha/2, 1 - (alpha/2)))
+  }
   
+  # return
+  return(list('CIs' = bootCI, 'betas' = betaCI))
 }
