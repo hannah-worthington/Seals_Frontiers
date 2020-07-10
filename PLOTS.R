@@ -68,11 +68,23 @@ ggplot(data = age.plot) +
 ### Produce plots from CohortsStopover_RUN model results
 
 # model number from CohortsStopover_RUN
-model <- 26
+model <- 8
 
 # create data for plotting
-res <- eval(as.name(paste('res', model, sep='.')))
-res.plot <- data.frame('beta' = unlist(res$beta), 'cohort' = as.factor(rep(1991:1994, times = K)), 'age' = sequence(K))
+res <- eval(as.name(paste('res', model, sep = '.')))
+#CIs.all <- eval(as.name(paste('CIs', model, sep = '.')))
+#CIs <- CIs.all$betas
+#beta.lower <- beta.upper <- c()
+#for (c in 1:n.cohorts)  {
+#  beta.lower <- c(beta.lower, CIs[[c]][1,])
+#  beta.upper <- c(beta.upper, CIs[[c]][2,])
+#}
+res.plot <- data.frame('beta' = unlist(res$beta),
+                       'cohort' = as.factor(rep(1991:1994, times = K)), 
+                       'age' = sequence(K))
+#beta.plot <- data.frame('beta.lower' = beta.lower, 'beta.upper' = beta.upper,
+#                        'cohort' = as.factor(rep(1991:1994, times = K)), 
+#                        'age' = sequence(K))
 
 # plot arrival distributions with observed ages underneath
 ggplot() +
@@ -83,7 +95,13 @@ ggplot() +
                                fill = cohort),
                  colour = 'black',
                  binwidth = 1,
-                 alpha = 0.5) +
+                 alpha = 0.2) +
+#  geom_ribbon(data = beta.plot,
+#              mapping = aes(x = age,
+#                            ymin = beta.lower,
+#                            ymax = beta.upper,
+#                            fill = cohort),
+#              alpha = 0.5) +
   geom_line(data = res.plot, 
             mapping = aes(x = age, 
                           y = beta,
