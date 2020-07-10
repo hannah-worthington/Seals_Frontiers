@@ -2,7 +2,7 @@
 
 # Name: likelihood_cohort
 # Objective: To evaluate the negative log-likelihood of the multiple cohort HMM given a set of parameter values and capture histories
-# Inputs: param - model specific, will be passed to other functions for structuring
+# Inputs: param - model specific, will be passed to unpack_param function for structuring
 #         X - capture histories, a matrix for each cohort stored in a list
 #         arr.dist - distribution on arrivals, 'normal' or 'lognormal'
 #         arr.str - structure for arrivals (shared or cohort), list over parameters of chosen distribution
@@ -418,7 +418,7 @@ bootstrap_data <- function(X, n.cohorts, n)  {
   for (c in 1:n.cohorts)  {
     
     # bootstrap individuals
-    bootsamp <- sample(1:n[c], n[c], replace=T)
+    bootsamp <- sample(1:n[c], n[c], replace = T)
     
     # add bootstrapped histories
     boothist <- X[[c]][bootsamp,]
