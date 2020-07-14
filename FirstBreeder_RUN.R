@@ -113,89 +113,89 @@ AIC.9 <- 2*opt.9$minimum + 2*length(param.9)
 
 ### model 10
 ### two normal distributions, one normal (mean and sd) cohort dependent
-param.10 <- c(rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, 0, 0, 0)
+param.10 <- c(rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, 0, 0, rep(0, 2))
 str.10 <- list(c('cohort', 'shared'), c('cohort', 'shared'), 'shared')
-opt.10 <- nlm(likelihood_cohort, param.10, X = data, arr.dist = 'normal', arr.str = str.10)
-res.10 <- unpack_param(opt.10$estimate, 'normal', str.10, min.age, n.cohorts, K)
+opt.10 <- nlm(likelihood_breeder, param.10, X = data, arr.dist = 'normal', arr.str = str.10)
+res.10 <- unpack_param_breeder(opt.10$estimate, 'normal', str.10, min.age, n.cohorts, K)
 AIC.10 <- 2*opt.10$minimum + 2*length(param.10)
 
 
 ### model 11
 ### two normal distributions, one mean and mixture proportions cohort dependent
-param.11 <- c(rep(0, n.cohorts), 0, rep(0, 2), rep(0, n.cohorts), 0, 0)
+param.11 <- c(rep(0, n.cohorts), 0, rep(0, 2), rep(0, n.cohorts), 0, rep(0, 2))
 param.11 <- opt.11$estimate  # max iterations exceeded, restart at current values
 str.11 <- list(c('cohort', 'shared'), c('shared', 'shared'), 'cohort')
-opt.11 <- nlm(likelihood_cohort, param.11, X = data, arr.dist = 'normal', arr.str = str.11)
-res.11 <- unpack_param(opt.11$estimate, 'normal', str.11, min.age, n.cohorts, K)
+opt.11 <- nlm(likelihood_breeder, param.11, X = data, arr.dist = 'normal', arr.str = str.11)
+res.11 <- unpack_param_breeder(opt.11$estimate, 'normal', str.11, min.age, n.cohorts, K)
 AIC.11 <- 2*opt.11$minimum + 2*length(param.11)
 
 
 ### model 12
 ### two normal distributions, both sds cohort dependent
-param.12 <- c(rep(0, 2), rep(0, 2*n.cohorts), 0, 0, 0)
+param.12 <- c(rep(0, 2), rep(0, 2*n.cohorts), 0, 0, rep(0, 2))
 param.12 <- opt.12$estimate  # max iterations exceeded, restart at current values
 str.12 <- list(c('shared', 'shared'), c('cohort', 'cohort'), 'shared')
-opt.12 <- nlm(likelihood_cohort, param.12, X = data, arr.dist = 'normal', arr.str = str.12)
-res.12 <- unpack_param(opt.12$estimate, 'normal', str.12, min.age, n.cohorts, K)
+opt.12 <- nlm(likelihood_breeder, param.12, X = data, arr.dist = 'normal', arr.str = str.12)
+res.12 <- unpack_param_breeder(opt.12$estimate, 'normal', str.12, min.age, n.cohorts, K)
 AIC.12 <- 2*opt.12$minimum + 2*length(param.12)
 
 
 ### model 13
 ### two normal distributions, one sd and mixture proportions cohort dependent
-param.13 <- c(rep(0, 2), rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, 0)
+param.13 <- c(rep(0, 2), rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, rep(0, 2))
 param.13 <- opt.13$estimate  # max iterations exceeded, restart at current values
 str.13 <- list(c('shared', 'shared'), c('cohort', 'shared'), 'cohort')
-opt.13 <- nlm(likelihood_cohort, param.13, X = data, arr.dist = 'normal', arr.str = str.13)
-res.13 <- unpack_param(opt.13$estimate, 'normal', str.13, min.age, n.cohorts, K)
+opt.13 <- nlm(likelihood_breeder, param.13, X = data, arr.dist = 'normal', arr.str = str.13)
+res.13 <- unpack_param_breeder(opt.13$estimate, 'normal', str.13, min.age, n.cohorts, K)
 AIC.13 <- 2*opt.13$minimum + 2*length(param.13)
 
 
 ### model 14
 ### two normal distributions, both means and one sd cohort dependent
-param.14 <- c(rep(0, 2*n.cohorts), rep(0, n.cohorts), 0, 0, 0, 0)
+param.14 <- c(rep(0, 2*n.cohorts), rep(0, n.cohorts), 0, 0, 0, rep(0, 2))
 str.14 <- list(c('cohort', 'cohort'), c('cohort', 'shared'), 'shared')
-opt.14 <- nlm(likelihood_cohort, param.14, X = data, arr.dist = 'normal', arr.str = str.14)
-res.14 <- unpack_param(opt.14$estimate, 'normal', str.14, min.age, n.cohorts, K)
+opt.14 <- nlm(likelihood_breeder, param.14, X = data, arr.dist = 'normal', arr.str = str.14)
+res.14 <- unpack_param_breeder(opt.14$estimate, 'normal', str.14, min.age, n.cohorts, K)
 AIC.14 <- 2*opt.14$minimum + 2*length(param.14)
 
 
 ### model 15
 ### two normal distributions, both means and mixture proportions cohort dependent
-param.15 <- c(rep(0, 2*n.cohorts), rep(0, 2), rep(0, n.cohorts), 0, 0)
+param.15 <- c(rep(0, 2*n.cohorts), rep(0, 2), rep(0, n.cohorts), 0, rep(0, 2))
 param.15 <- opt.15$estimate  # max iterations exceeded, restart at current values
 str.15 <- list(c('cohort', 'cohort'), c('shared', 'shared'), 'cohort')
-opt.15 <- nlm(likelihood_cohort, param.15, X = data, arr.dist = 'normal', arr.str = str.15)
-res.15 <- unpack_param(opt.15$estimate, 'normal', str.15, min.age, n.cohorts, K)
+opt.15 <- nlm(likelihood_breeder, param.15, X = data, arr.dist = 'normal', arr.str = str.15)
+res.15 <- unpack_param_breeder(opt.15$estimate, 'normal', str.15, min.age, n.cohorts, K)
 AIC.15 <- 2*opt.15$minimum + 2*length(param.15)
 
 
 ### model 16
 ### two normal distributions, one mean and both sds cohort dependent
-param.16 <- c(rep(0, n.cohorts), 0, rep(0, 2*n.cohorts), 0, 0, 0)
+param.16 <- c(rep(0, n.cohorts), 0, rep(0, 2*n.cohorts), 0, 0, rep(0, 2))
 param.16 <- opt.16$estimate  # max iterations exceeded, restart at current values
 str.16 <- list(c('cohort', 'shared'), c('cohort', 'cohort'), 'shared')
-opt.16 <- nlm(likelihood_cohort, param.16, X = data, arr.dist = 'normal', arr.str = str.16)
-res.16 <- unpack_param(opt.16$estimate, 'normal', str.16, min.age, n.cohorts, K)
+opt.16 <- nlm(likelihood_breeder, param.16, X = data, arr.dist = 'normal', arr.str = str.16)
+res.16 <- unpack_param_breeder(opt.16$estimate, 'normal', str.16, min.age, n.cohorts, K)
 AIC.16 <- 2*opt.16$minimum + 2*length(param.16)
 
 
 ### model 17
 ### two normal distributions, one normal (mean and sd) and mixture proportions cohort dependent
-param.17 <- c(rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, 0)
+param.17 <- c(rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, rep(0, 2))
 param.17 <- opt.17$estimate  # max iterations exceeded, restart at current values
 str.17 <- list(c('cohort', 'shared'), c('cohort', 'shared'), 'cohort')
-opt.17 <- nlm(likelihood_cohort, param.17, X = data, arr.dist = 'normal', arr.str = str.17)
-res.17 <- unpack_param(opt.17$estimate, 'normal', str.17, min.age, n.cohorts, K)
+opt.17 <- nlm(likelihood_breeder, param.17, X = data, arr.dist = 'normal', arr.str = str.17)
+res.17 <- unpack_param_breeder(opt.17$estimate, 'normal', str.17, min.age, n.cohorts, K)
 AIC.17 <- 2*opt.17$minimum + 2*length(param.17)
 
 
 ### model 18
 ### two normal distributions, both sds and mixture proportions cohort dependent
-param.18 <- c(rep(0, 2), rep(0, 2*n.cohorts), rep(0, n.cohorts), 0, 0)
+param.18 <- c(rep(0, 2), rep(0, 2*n.cohorts), rep(0, n.cohorts), 0, rep(0, 2))
 param.18 <- opt.18$estimate  # max iterations exceeded, restart at current values
 str.18 <- list(c('shared', 'shared'), c('cohort', 'cohort'), 'cohort')
-opt.18 <- nlm(likelihood_cohort, param.18, X = data, arr.dist = 'normal', arr.str = str.18)
-res.18 <- unpack_param(opt.18$estimate, 'normal', str.18, min.age, n.cohorts, K)
+opt.18 <- nlm(likelihood_breeder, param.18, X = data, arr.dist = 'normal', arr.str = str.18)
+res.18 <- unpack_param_breeder(opt.18$estimate, 'normal', str.18, min.age, n.cohorts, K)
 AIC.18 <- 2*opt.18$minimum + 2*length(param.18)
 
 
