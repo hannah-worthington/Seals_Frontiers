@@ -200,41 +200,41 @@ AIC.18 <- 2*opt.18$minimum + 2*length(param.18)
 
 
 
-### One log-normal distribution for recruitment, constant p, constant phi
+### One log-normal distribution for recruitment, constant p, constant first-time breeder phi, constant return breeder phi
 
 ### model 19
 ### one log-normal distribution, mean and sd shared across cohorts
-param.19 <- c(0, 0, 0, 0)
+param.19 <- c(0, 0, 0, rep(0, 2))
 str.19 <- list('shared', 'shared')
-opt.19 <- nlm(likelihood_cohort, param.19, X = data, arr.dist = 'lognormal', arr.str = str.19)
-res.19 <- unpack_param(opt.19$estimate, 'lognormal', str.19, min.age, n.cohorts, K)
+opt.19 <- nlm(likelihood_breeder, param.19, X = data, arr.dist = 'lognormal', arr.str = str.19)
+res.19 <- unpack_param_breeder(opt.19$estimate, 'lognormal', str.19, min.age, n.cohorts, K)
 AIC.19 <- 2*opt.19$minimum + 2*length(param.19)
 
 
 ### model 20
 ### one log-normal distribution, mean cohort dependent, sd shared across cohorts
-param.20 <- c(rep(0, n.cohorts), 0, 0, 0)
+param.20 <- c(rep(0, n.cohorts), 0, 0, rep(0, 2))
 str.20 <- list('cohort', 'shared')
-opt.20 <- nlm(likelihood_cohort, param.20, X = data, arr.dist = 'lognormal', arr.str = str.20)
-res.20 <- unpack_param(opt.20$estimate, 'lognormal', str.20, min.age, n.cohorts, K)
+opt.20 <- nlm(likelihood_breeder, param.20, X = data, arr.dist = 'lognormal', arr.str = str.20)
+res.20 <- unpack_param_breeder(opt.20$estimate, 'lognormal', str.20, min.age, n.cohorts, K)
 AIC.20 <- 2*opt.20$minimum + 2*length(param.20)
 
 
 ### model 21
 ### one log-normal distribution, mean shared across cohorts, sd cohort dependent
-param.21 <- c(0, rep(0, n.cohorts), 0, 0)
+param.21 <- c(0, rep(0, n.cohorts), 0, rep(0, 2))
 str.21 <- list('shared', 'cohort')
-opt.21 <- nlm(likelihood_cohort, param.21, X = data, arr.dist = 'lognormal', arr.str = str.21)
-res.21 <- unpack_param(opt.21$estimate, 'lognormal', str.21, min.age, n.cohorts, K)
+opt.21 <- nlm(likelihood_breeder, param.21, X = data, arr.dist = 'lognormal', arr.str = str.21)
+res.21 <- unpack_param_breeder(opt.21$estimate, 'lognormal', str.21, min.age, n.cohorts, K)
 AIC.21 <- 2*opt.21$minimum + 2*length(param.21)
 
 
 ### model 22
 ### one log-normal distribution, mean and sd cohort dependent
-param.22 <- c(rep(0, n.cohorts), rep(0, n.cohorts), 0, 0)
+param.22 <- c(rep(0, n.cohorts), rep(0, n.cohorts), 0, rep(0, 2))
 str.22 <- list('cohort', 'cohort')
-opt.22 <- nlm(likelihood_cohort, param.22, X = data, arr.dist = 'lognormal', arr.str = str.22)
-res.22 <- unpack_param(opt.22$estimate, 'lognormal', str.22, min.age, n.cohorts, K)
+opt.22 <- nlm(likelihood_breeder, param.22, X = data, arr.dist = 'lognormal', arr.str = str.22)
+res.22 <- unpack_param_breeder(opt.22$estimate, 'lognormal', str.22, min.age, n.cohorts, K)
 AIC.22 <- 2*opt.22$minimum + 2*length(param.22)
 
 
