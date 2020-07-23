@@ -439,7 +439,7 @@ bootstrap_data <- function(X, n.cohorts, n)  {
 
 ### bootstrap for confidence intervals
 
-# Name: bootstrap_fn
+# Name: bootstrap_fn_breeder
 # Objective: To generate bootstrap estimates and confidence intervals for results and plotting
 # Inputs: nboot - number of bootstraps to perform
 #         param - starting values for the optimiser
@@ -451,7 +451,7 @@ bootstrap_data <- function(X, n.cohorts, n)  {
 # Outputs: CIs - bootstrap confidence intervals for all model parameters
 #          betas - plotting values for arrival distribution
 
-bootstrap_fn <- function(nboot, param, X, arr.dist, arr.str, min.age = 3, alpha = 0.05)  {
+bootstrap_fn_breeder <- function(nboot, param, X, arr.dist, arr.str, min.age = 3, alpha = 0.05)  {
   
   # define constants
   n.cohorts <- length(X)  # number of cohorts
@@ -469,12 +469,12 @@ bootstrap_fn <- function(nboot, param, X, arr.dist, arr.str, min.age = 3, alpha 
   betaCI <- list()
   
   # optimise original data
-  opt <- nlm(likelihood_cohort, param, X = X, arr.dist = arr.dist, arr.str = arr.str)
+  opt <- nlm(likelihood_breeder, param, X = X, arr.dist = arr.dist, arr.str = arr.str)
   while (opt$iterations == 100)  {
-    opt <- nlm(likelihood_cohort, opt$estimate, X = data, arr.dist = arr.dist, arr.str = arr.str)
+    opt <- nlm(likelihood_breeder, opt$estimate, X = data, arr.dist = arr.dist, arr.str = arr.str)
   }
   # bootres[1,] <- opt$estimate
-  unpack <- unpack_param(opt$estimate, arr.dist, arr.str, min.age, n.cohorts, K)
+  unpack <- unpack_param_breeder(opt$estimate, arr.dist, arr.str, min.age, n.cohorts, K)
   values <- unpack$values
   beta <- unpack$beta
   
@@ -486,11 +486,11 @@ bootstrap_fn <- function(nboot, param, X, arr.dist, arr.str, min.age = 3, alpha 
     bootdata <- bootstrap_data(X, n.cohorts, n)
     
     # maximise likelihood
-    bootopt <- nlm(likelihood_cohort, opt$estimate, X = bootdata, arr.dist = arr.dist, arr.str = arr.str)
+    bootopt <- nlm(likelihood_breeder, opt$estimate, X = bootdata, arr.dist = arr.dist, arr.str = arr.str)
     
     # check convergence
     while (bootopt$iterations == 100)  {
-      bootopt <- nlm(likelihood_cohort, bootopt$estimate, X = bootdata, arr.dist = arr.dist, arr.str = arr.str)
+      bootopt <- nlm(likelihood_breeder, bootopt$estimate, X = bootdata, arr.dist = arr.dist, arr.str = arr.str)
     }
     
     # store results
@@ -498,7 +498,7 @@ bootstrap_fn <- function(nboot, param, X, arr.dist, arr.str, min.age = 3, alpha 
     # write.table(bootres, 'bootres.txt', col.names = F, row.names = F)
     
     # unpack the estimates and store
-    unpack.boot <- unpack_param(bootopt$estimate, arr.dist, arr.str, min.age, n.cohorts, K)
+    unpack.boot <- unpack_param_breeder(bootopt$estimate, arr.dist, arr.str, min.age, n.cohorts, K)
     for (i in 1:length(values))  {
       values[[i]] <- rbind(values[[i]], unpack.boot$values[[i]])
     }

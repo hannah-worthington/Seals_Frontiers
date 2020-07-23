@@ -275,10 +275,10 @@ opt.26 <- nlm(likelihood_breeder, param.26, X = data, arr.dist = 'lognormal', ar
 res.26 <- unpack_param_breeder(opt.26$estimate, 'lognormal', str.26, min.age, n.cohorts, K)
 AIC.26 <- 2*opt.26$minimum + 2*length(param.26)
 
-CIs.26 <- bootstrap_fn(999, param.26, data, 'lognormal', str.26)
+CIs.26 <- bootstrap_fn_breeder(999, param.26, data, 'lognormal', str.26)
 
 
-### model 27
+2q2### model 27
 ### two log-normal distributions, both means cohort dependent
 param.27 <- c(rep(0, 2*n.cohorts), rep(0, 2), 0, 0, rep(0, 2))
 str.27 <- list(c('cohort', 'cohort'), c('shared', 'shared'), 'shared')
@@ -289,38 +289,36 @@ AIC.27 <- 2*opt.27$minimum + 2*length(param.27)
 
 ### model 28
 ### two log-normal distributions, one distribution (mean and sd) cohort dependent
-param.28 <- c(rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, 0, 0, 0)
-param.28 <- opt.28$estimate  # max iterations exceeded, restart at current values
+param.28 <- c(rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, 0, 0, rep(0, 2))
 str.28 <- list(c('cohort', 'shared'), c('cohort', 'shared'), 'shared')
-opt.28 <- nlm(likelihood_cohort, param.28, X = data, arr.dist = 'lognormal', arr.str = str.28)
-res.28 <- unpack_param(opt.28$estimate, 'lognormal', str.28, min.age, n.cohorts, K)
+opt.28 <- nlm(likelihood_breeder, param.28, X = data, arr.dist = 'lognormal', arr.str = str.28)
+res.28 <- unpack_param_breeder(opt.28$estimate, 'lognormal', str.28, min.age, n.cohorts, K)
 AIC.28 <- 2*opt.28$minimum + 2*length(param.28)
 
 
 ### model 29
 ### two log-normal distributions, one mean and mixture proportions cohort dependent
-param.29 <- c(rep(0, n.cohorts), 0, rep(0, 2), rep(0, n.cohorts), 0, 0)
-param.29 <- opt.29$estimate  # max iterations exceeded, restart at current values
+param.29 <- c(rep(0, n.cohorts), 0, rep(0, 2), rep(0, n.cohorts), 0, rep(0, 2))
 str.29 <- list(c('cohort', 'shared'), c('shared', 'shared'), 'cohort')
-opt.29 <- nlm(likelihood_cohort, param.29, X = data, arr.dist = 'lognormal', arr.str = str.29)
-res.29 <- unpack_param(opt.29$estimate, 'lognormal', str.29, min.age, n.cohorts, K)
+opt.29 <- nlm(likelihood_breeder, param.29, X = data, arr.dist = 'lognormal', arr.str = str.29)
+res.29 <- unpack_param_breeder(opt.29$estimate, 'lognormal', str.29, min.age, n.cohorts, K)
 AIC.29 <- 2*opt.29$minimum + 2*length(param.29)
 
 
 ### model 30
 ### two log-normal distributions, both sds cohort dependent
-param.30 <- c(rep(0, 2), rep(0, 2*n.cohorts), 0, 0, 0)
+param.30 <- c(rep(0, 2), rep(0, 2*n.cohorts), 0, 0, rep(0, 2))
 param.30 <- opt.30$estimate  # max iterations exceeded, restart at current values
 str.30 <- list(c('shared', 'shared'), c('cohort', 'cohort'), 'shared')
-opt.30 <- nlm(likelihood_cohort, param.30, X = data, arr.dist = 'lognormal', arr.str = str.30)
-res.30 <- unpack_param(opt.30$estimate, 'lognormal', str.30, min.age, n.cohorts, K)
+opt.30 <- nlm(likelihood_breeder, param.30, X = data, arr.dist = 'lognormal', arr.str = str.30)
+res.30 <- unpack_param_breeder(opt.30$estimate, 'lognormal', str.30, min.age, n.cohorts, K)
 AIC.30 <- 2*opt.30$minimum + 2*length(param.30)
 
 
 ### model 31
 ### two log-normal distributions, one sd and mixture proportions cohort dependent
-param.31 <- c(rep(0, 2), rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, 0)
+param.31 <- c(rep(0, 2), rep(0, n.cohorts), 0, rep(0, n.cohorts), 0, rep(0, 2))
 str.31 <- list(c('shared', 'shared'), c('cohort', 'shared'), 'cohort')
-opt.31 <- nlm(likelihood_cohort, param.31, X = data, arr.dist = 'lognormal', arr.str = str.31)
-res.31 <- unpack_param(opt.31$estimate, 'lognormal', str.31, min.age, n.cohorts, K)
+opt.31 <- nlm(likelihood_breeder, param.31, X = data, arr.dist = 'lognormal', arr.str = str.31)
+res.31 <- unpack_param_breeder(opt.31$estimate, 'lognormal', str.31, min.age, n.cohorts, K)
 AIC.31 <- 2*opt.31$minimum + 2*length(param.31)
