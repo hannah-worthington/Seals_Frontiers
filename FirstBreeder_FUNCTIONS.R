@@ -18,8 +18,8 @@ likelihood_breeder <- function(param, X, arr.dist, arr.str, min.age = 3)  {
   n <- rep(0, n.cohorts)  # number of individuals in each cohort
   K <- rep(0, n.cohorts)  # number of capture occasions for each cohort
   for (c in 1:n.cohorts)  {
-    n[c] <- length(data[[c]][,1])
-    K[c] <- length(data[[c]][1,])
+    n[c] <- length(X[[c]][,1])
+    K[c] <- length(X[[c]][1,])
   }
   
   # unpack the parameter vector
@@ -458,8 +458,8 @@ bootstrap_fn_breeder <- function(nboot, param, X, arr.dist, arr.str, min.age = 3
   n <- rep(0, n.cohorts)  # number of individuals in each cohort
   K <- rep(0, n.cohorts)  # number of capture occasions in each cohort
   for (c in 1:n.cohorts)  {
-    n[c] <- length(data[[c]][,1])
-    K[c] <- length(data[[c]][1,])
+    n[c] <- length(X[[c]][,1])
+    K[c] <- length(X[[c]][1,])
   }
   n.mixtures <- length(arr.str[[1]])
   
@@ -471,7 +471,7 @@ bootstrap_fn_breeder <- function(nboot, param, X, arr.dist, arr.str, min.age = 3
   # optimise original data
   opt <- nlm(likelihood_breeder, param, X = X, arr.dist = arr.dist, arr.str = arr.str)
   while (opt$iterations == 100)  {
-    opt <- nlm(likelihood_breeder, opt$estimate, X = data, arr.dist = arr.dist, arr.str = arr.str)
+    opt <- nlm(likelihood_breeder, opt$estimate, X = X, arr.dist = arr.dist, arr.str = arr.str)
   }
   # bootres[1,] <- opt$estimate
   unpack <- unpack_param_breeder(opt$estimate, arr.dist, arr.str, min.age, n.cohorts, K)
