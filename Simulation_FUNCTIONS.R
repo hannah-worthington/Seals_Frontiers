@@ -1,6 +1,6 @@
 ### Code to run simulation study
 
-# Name: sim.study
+# Name: sim_study
 # Objective: To generate data and compare the multiple-cohort to single-cohort approach for estimating recruitment
 # Inputs: n - number of individuals in a cohort (constant)
 #         C - number of cohorts
@@ -19,35 +19,43 @@
 sim_study <- function(n, C, K, r, p, phi, arr.dist, n.sim) {
   
   # storage
-  beta.all <- list()
+  mat <- matrix(0, nrow = n.sim, ncol = K)
+  beta.all <- list(mat)
+  beta.1 <- list(mat)
+  for (c in 2:C)  {
+    beta.all[[c]] <- mat[,-(1:(c-1))]
+    beta.1[[c]] <- mat[,-(1:(c-1))]
+  }
   p.all <- rep(0, n.sim)
   phi.all <- rep(0, n.sim)
-  beta.1 <- list()
-  p.1 <- list()
-  phi.1 <- list()
+  p.1 <- matrix(0, nrow = C, ncol = n.sim)
+  phi.1 <- matrix(0, nrow = C, ncol = n.sim)
   
   # constants
-  str.param <- list('cohort', 'cohort')
-  param.all <- c(rep(0, 2*C), rep(0, 2*C), rep(0, C), 0, 0)
+  str.param <- list(c('shared', 'shared'), c('shared', 'shared'), 'cohort')
+  param.all <- c(rep(0, 2), rep(0, 2), rep(0, C), 0, 0)
   param.1 <- c(rep(0, 2), rep(0, 2), 0, 0, 0)
+  K <- seq(K, K - C + 1)
   
   # loop over iterations
   for (sim in 1: n.sim)  {
   
     # simulate data
-    data <- sim_data(n, C, K, r, p, phi, arr.dist)
+    data <- sim_data(n, C, K[1], r, p, phi, arr.dist)
     
     # multiple-cohort approach
     opt.all <- nlm(likelihood_allcohorts, param.all, X = data, arr.dist = arr.dist, arr.str = str.param)
     while (opt.all$iterations == 100)  {
       opt.all <- nlm(likelihood_allcohorts, opt.all$estimate, X = data, arr.dist = arr.dist, arr.str = str.param)
     }
-    res.all <- unpack_param(opt.all$estimate, arr.dist, str.param, min.age = 3, n.cohorts, K)
+    res.all <- unpack_param(opt.all$estimate, arr.dist, str.param, min.age = 3, n.cohorts = C, K = K)
     for (c in 1:n.cohorts)  {
-      beta.all[[c]] <- rbind(beta.all[[c]], res.all$beta[[c]])
+      beta.all[[c]][sim,] <- res.all$beta[[c]]
     } 
     p.all[sim] <- res.all$values$p
     phi.all[sim] <- res.all$values$phi
+    
+    print(paste('Multiple simulation', sim, 'finished'))
   
     # single-cohort approach
     for (c in 1:n.cohorts)  {
@@ -55,10 +63,12 @@ sim_study <- function(n, C, K, r, p, phi, arr.dist, n.sim) {
       while (opt.1$iterations == 100)  {
         opt.1 <- nlm(likelihood_singlecohort, opt.1$estimate, X = data[[c]], arr.dist = arr.dist, arr.str = str.param)
       }
-      res.1 <- unpack_param(opt.1$estimate, arr.dist, str.param, min.age = 3, n.cohorts, K)
-      beta.1[[c]] <- rbind(beta.1[[c]], res.1$beta)
-      p.1[[c]] <- rbind(p.1[[c]], res.1$values$p)
-      phi.1[[c]] <- rbind(phi.1[[c]], res.1$values$phi)
+      res.1 <- unpack_param(opt.1$estimate, arr.dist, str.param, min.age = 3, n.cohorts = 1, K = K[c])
+      beta.1[[c]][sim,] <- res.1$beta[[1]]
+      p.1[c,sim] <- res.1$values$p
+      phi.1[c,sim] <- res.1$values$phi
+      
+      print(paste('single', c, 'simulation', sim, 'finished'))
     }
   }
   
@@ -70,7 +80,7 @@ sim_study <- function(n, C, K, r, p, phi, arr.dist, n.sim) {
 
 ### Code to generate multi-cohort capture-recapture data
 
-# Name: sim.data
+# Name: sim_data
 # Objective: To generate multiple cohorts of capture-recapture data using the given parameter values
 # Inputs: n - number of individuals in a cohort (constant)
 #         C - number of cohorts
@@ -92,46 +102,66 @@ sim_data <- function(n, C, K, r, p, phi, arr.dist)  {
   # loop over cohorts
   for (c in 1:C)  {
     
+    # captures
+    captures <- c()
+    
     # number of capture occasions for cohort
     K.c <- K - c + 1
-    
-    # storage variable
-    attendance <- matrix(0, nrow = n, ncol = K.c) 
     
     # generate recruitment probabilities
     beta_fun <- match.fun(paste('two', arr.dist, 'betas', sep = ''))
     if (arr.dist == 'normal' | arr.dist == 'lognormal')  {
-      beta <- beta_fun(r$means[,c], r$sds[,c], r$w[c], K.c)
-    } else if (arr.dist == 'poisson')
-      beta <- beta_fun(r$means[,c], r$w[c], K.c)
+      beta <- beta_fun(mu = r$means[,c], sd = r$sds[,c], w = r$w[c], K = K.c, min.age = 3)
+    } else if (arr.dist == 'poisson')  {
+      beta <- beta_fun(mu = r$means[,c], w = r$w[c], K = K.c, min.age = 3)
+    }
+  
+    # current number of individuals
+    i <- 0
     
-    # generate recruitment occasions
-    recruit.freq <- rmultinom(1, n, beta)
-    recruit <- rep(1:K.c, times = recruit.freq)
+    # continue to generate data until the required number of observed individuals are generated
+    while (i < n)  {
     
-    # loop over individuals
-    for (i in 1:n)  {
-      
-      # record years of attendance
-      attendance[i, recruit[i]] <- 1
-      if (recruit[i] < K.c)  {
-        for (k in (recruit[i] + 1):K.c)  {
-          if (attendance[i, (k-1)] == 1)  {
-            attendance[i,k] <- rbinom(1, 1, phi)
+      # count how many individuals still required
+      needed <- n-i
+    
+      # storage variable
+      attendance <- matrix(0, nrow = needed, ncol = K.c) 
+    
+      # generate recruitment occasions
+      recruit.freq <- rmultinom(1, needed, beta)
+      recruit <- rep(1:K.c, times = recruit.freq)
+    
+      # loop over individuals
+      for (j in 1:needed)  {
+        
+        # record years of attendance
+        attendance[j, recruit[j]] <- 1
+        if (recruit[j] < K.c)  {
+          for (k in (recruit[j] + 1):K.c)  {
+            if (attendance[j, (k-1)] == 1)  {
+              attendance[j,k] <- rbinom(1, 1, phi)
+            }
           }
         }
       }
+      
+      # determine capture histories
+      capture.needed <- ifelse(attendance == 1, rbinom(sum(attendance), 1, p), 0)
+      
+      # add non-zero histories to 
+      captures <- rbind(captures, capture.needed[rowSums(capture.needed) != 0,])
+      
+      # update number of individuals
+      i <- length(captures[,1])
     }
-    
-    # determine capture histories
-    capture <- ifelse(attendance == 1, rbinom(1, 1, p), 0)
-    
+  
     # add capture matrix to list
-    X <- append(X, capture)
+    X[[c]] <- captures
   }
   
   # return
-  return(list('X' = X))
+  return(X)
 }
 
 
@@ -220,7 +250,7 @@ likelihood_singlecohort <- function(param, X, arr.dist, arr.str, min.age = 3)  {
   K <- length(X[1,]) # number of capture occasions for each cohort
   
   # unpack the parameter vector
-  params <- unpack_param(param, arr.dist, arr.str, min.age, n.cohorts = 1, K)
+  params <- unpack_param(param, arr.dist, arr.str, min.age = 3, n.cohorts = 1, K)
   HMM <- HMM_str(params, n.cohorts = 1, K)
   
   lik <- 0
@@ -243,7 +273,7 @@ likelihood_singlecohort <- function(param, X, arr.dist, arr.str, min.age = 3)  {
   }
   
   # return
-  return(lik)
+  return(-lik)
 }
 
 
@@ -447,34 +477,35 @@ unpack_param <- function(param, arr.dist, arr.str, min.age, n.cohorts, K)  {
 
 
 
+### Function to calculate beta probabilities from a log-normal distribution over the plausible recruitment ages
 
-### Functions to calculate arrival probabilities
-
-### Function to calculate beta probabilities from a mixture of two normal distributions over the plausible recruitment ages
-
-# Name: twonormalbetas
-# Objective: To calculate the beta probabilities from a mixture of two truncated normal distributions
-# Inputs: mu - means vector for the two normals that form the arrival distribution
-#         sd - sds vector for the two normals that form the arrival distribution
-#         w - mixture proportion for distribution 1
+# Name: onelognormalbetas
+# Objective: To calculate the beta probabilities from a truncated log-normal distribution
+# Inputs: mu - mean of the arrival distribution (log-scale)
+#         sd - sd of the arrival distribution (log-scale)
 #         K - number of occasions
 #         min.age - minimum age of return
 # Outputs: beta - set of beta parameters
 
-twonormalbetas <- function(mu, sd, w, K, min.age)  {
+onelognormalbetas <- function(mu, sd, K, min.age)  {
   
-  # find the separate truncated mixture distributions
-  mix.1 <- onenormalbetas(mu[1], sd[1], K, min.age)
-  mix.2 <- onenormalbetas(mu[2], sd[2], K, min.age)
+  # storage
+  beta <- rep(0, K)
   
-  # create mixture
-  beta <- w*mix.1 + (1-w)*mix.2
+  # integrate to find probabilities
+  for (k in min.age:K)  {
+    beta[k] <- plnorm(k + 0.5, mu, sd) - plnorm(k - 0.5, mu, sd)
+  }
   
-  # check the probabilities sum to one
-  total <- sum(beta)
-  if (total > 0)  {
-    beta <- beta/total
-  } 
+  # truncating, so reweight the probabilities checking that they are nonzero
+  truncate <- plnorm(K + 0.5, mu, sd) - plnorm(min.age - 0.5, mu, sd)
+  if (truncate > 0)  {
+    beta <- beta/truncate
+  } else if (truncate == 0 & (plnorm(min.age - 0.5, mu, sd) - plnorm(0, mu, sd)) > 0)  {
+    beta[min.age] <- 1
+  } else  {
+    beta[K] <- 1
+  }
   
   # return the beta probabilities
   return(beta)
