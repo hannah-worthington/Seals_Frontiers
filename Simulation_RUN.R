@@ -43,21 +43,21 @@ sim <- eval(as.name(paste('sim.res', sim.no, sep = '.')))
 
 # create data for plotting
 sim.res.plot.multiple <- data.frame('beta' = unlist(sim$multiple$beta),
-                                    'cohort' = as.factor(rep(0:(C-1), times = n.sim*(K:(K-C+1)))),
+                                    'cohort' = as.factor(rep(paste('Cohort', 0:(C-1)), times = n.sim*(K:(K-C+1)))),
                                     'age' = rep(sequence(K:(K-C+1)), each = n.sim),
                                     'simulation' = rep(1:n.sim, times = sum(K:(K-C+1))),
-                                    'model' = rep('multiple', times = n.sim*sum(K:(K-C+1))))
+                                    'model' = rep('Multiple', times = n.sim*sum(K:(K-C+1))))
 sim.res.plot.single <- data.frame('beta' = unlist(sim$single$beta),
-                                  'cohort' = as.factor(rep(0:(C-1), times = n.sim*(K:(K-C+1)))),
+                                  'cohort' = as.factor(rep(paste('Cohort', 0:(C-1)), times = n.sim*(K:(K-C+1)))),
                                   'age' = rep(sequence(K:(K-C+1)), each = n.sim),
                                   'simulation' = rep(1:n.sim, times = sum(K:(K-C+1))),
-                                  'model' = rep('single', times = n.sim*sum(K:(K-C+1))))
+                                  'model' = rep('Single', times = n.sim*sum(K:(K-C+1))))
 sim.res.plot <- rbind(sim.res.plot.multiple, sim.res.plot.single)
 
 sim.p.phi.plot <- data.frame('p' = c(sim$multiple$p, as.vector(sim$single$p)),
                          'phi' = c(sim$multiple$phi, as.vector(sim$single$phi)),
-                         'cohort' = as.factor(c(rep('all', n.sim), rep(0:(C-1), times = n.sim))),
-                         'model' = c(rep('multiple', n.sim), rep('single', n.sim*C)))
+                         'cohort' = as.factor(c(rep('All Cohorts', n.sim), rep(paste('Cohort', 0:(C-1)), times = n.sim))),
+                         'model' = c(rep('Multiple', n.sim), rep('Single', n.sim*C)))
 
 # create truth for plotting
 beta.true <- list()
@@ -65,7 +65,7 @@ for (c in 1:C)  {
   beta.true[[c]] <- twolognormalbetas(logmeans, logsds, w[c], K = K-c+1, min.age = 3)
 }
 res.plot.true <- data.frame('beta' = unlist(beta.true),
-                            'cohort' = as.factor(rep(0:(C-1), times = K:(K-C+1))),
+                            'cohort' = as.factor(rep(paste('Cohort', 0:(C-1)), times = K:(K-C+1))),
                             'age' = sequence(K:(K-C+1)))
 
 # define colour palette for plotting to match across cohorts
@@ -86,7 +86,9 @@ beta.plot <- ggplot() +
                           y = beta),
             colour = 'black',
             size = 1.5) +
-  facet_wrap( ~ cohort + model, nrow = 2) +
+  facet_grid(rows = vars(model),
+             cols = vars(cohort)) +
+  scale_y_continuous(limits = c(0, 1)) +
   scale_color_manual(values = my.palette[1:4]) +
   theme_minimal() +
   theme(legend.position = 'none',
@@ -102,9 +104,11 @@ p.plot <- ggplot() +
   geom_vline(xintercept = p,
              size = 1.5) +
   facet_wrap( ~ model) +
-  scale_fill_manual(values = my.palette[c(1, 2, 3, 4, 5)]) +
+  scale_x_continuous(limits = c(0.2, 1)) +
+  scale_fill_manual(values = my.palette[c(5, 1, 2, 3, 4)]) +
   theme_minimal() +
-  theme(strip.text = element_text(face = 'bold',
+  theme(legend.position = 'none',
+        strip.text = element_text(face = 'bold',
                                   size = 12),
         axis.title = element_text(size = 12),
         axis.text.y = element_blank())
@@ -116,14 +120,21 @@ phi.plot <- ggplot() +
   geom_vline(xintercept = phi,
              size = 1.5) +
   facet_wrap( ~ model) +
-  scale_fill_manual(values = my.palette[c(1, 2, 3, 4, 5)]) +
+  scale_x_continuous(limits = c(0.5, 1)) +
+  scale_fill_manual(values = my.palette[c(5, 1, 2, 3, 4)]) +
   theme_minimal() +
-  theme(legend.position = 'none',
+  theme(legend.position = 'right',
+        legend.title = element_blank(),
+        legend.text = element_text(size = 12),
+        legend.key.size = unit(2, 'line'),
         strip.text = element_text(face = 'bold',
                                   size = 12),
         axis.title = element_text(size = 12),
         axis.text.y = element_blank())
 
-beta.plot + {
-  p.plot + phi.plot
-} + plot_layout(ncol = 1, heights = c(2, 1))
+beta.plot + 
+  { p.plot + phi.plot } + 
+  plot_layout(ncol = 1, 
+              heights = c(2, 1), 
+              guides = 'collect')
+
