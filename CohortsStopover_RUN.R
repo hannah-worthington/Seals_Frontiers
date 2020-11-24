@@ -239,6 +239,9 @@ res.22 <- unpack_param(opt.22$estimate, 'lognormal', str.22, min.age, n.cohorts,
 AIC.22 <- 2*opt.22$minimum + 2*length(param.22)
 
 
+
+### Two log-normal distributions for recruitment, constant p, constant phi
+
 ### model 23
 ### two log-normal distributions, means, sds and mixture proportions all shared
 param.23 <- c(rep(0, 2), rep(0, 2), 0, 0, 0)
