@@ -65,10 +65,10 @@ ggplot(data = age.plot) +
 
 
 
-### Produce plots from CohortsStopover_RUN model results
+### Produce plots from CohortsStopover_RUN/FirstBreeder_RUN model results
 
-# model number from CohortsStopover_RUN
-model <- 26
+# model number from CohortsStopover_RUN/FirstBreeder_RUN
+model <- '26b'
 
 # create data for plotting
 res <- eval(as.name(paste('res', model, sep = '.')))
@@ -110,6 +110,7 @@ ggplot() +
   facet_wrap( ~ cohort)  +
   scale_color_brewer(palette = 'Set1') +
   scale_fill_brewer(palette = 'Set1') +
+  scale_y_continuous(limits = c(0, 0.37)) +
   theme_minimal() +
   theme(legend.position = 'none',
         strip.text = element_text(face = 'bold',
