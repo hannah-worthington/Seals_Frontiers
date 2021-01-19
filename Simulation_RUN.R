@@ -93,8 +93,9 @@ beta.plot <- ggplot() +
   theme_minimal() +
   theme(legend.position = 'none',
         strip.text = element_text(face = 'bold',
-                                  size = 12),
-        axis.title = element_text(size = 12),
+                                  size = 14),
+        axis.title = element_text(size = 16),
+        axis.title.y = element_text(vjust = 3),
         axis.text = element_text(size = 12))
 
 p.plot <- ggplot() +
@@ -109,8 +110,9 @@ p.plot <- ggplot() +
   theme_minimal() +
   theme(legend.position = 'none',
         strip.text = element_text(face = 'bold',
-                                  size = 12),
-        axis.title = element_text(size = 12),
+                                  size = 14),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
         axis.text.y = element_blank())
 
 phi.plot <- ggplot() +
@@ -128,8 +130,9 @@ phi.plot <- ggplot() +
         legend.text = element_text(size = 12),
         legend.key.size = unit(2, 'line'),
         strip.text = element_text(face = 'bold',
-                                  size = 12),
-        axis.title = element_text(size = 12),
+                                  size = 14),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 12),
         axis.text.y = element_blank())
 
 beta.plot + 

@@ -58,8 +58,9 @@ ggplot(data = age.plot) +
   theme_minimal() +
   theme(legend.position = 'none',
         strip.text = element_text(face = 'bold',
-                                  size = 12),
-        axis.title = element_text(size = 12),
+                                  size = 14),
+        axis.title = element_text(size = 16),
+        axis.title.y = element_text(vjust = 3),
         axis.text = element_text(size = 12))
   
 
@@ -68,6 +69,7 @@ ggplot(data = age.plot) +
 ### Produce plots from CohortsStopover_RUN/FirstBreeder_RUN model results
 
 # model number from CohortsStopover_RUN/FirstBreeder_RUN
+model <- '26'
 model <- '26b'
 
 # create data for plotting
@@ -114,7 +116,8 @@ ggplot() +
   theme_minimal() +
   theme(legend.position = 'none',
         strip.text = element_text(face = 'bold',
-                                  size = 12),
-        axis.title = element_text(size = 12),
+                                  size = 14),
+        axis.title = element_text(size = 16),
+        axis.title.y = element_text(vjust = 3),
         axis.text = element_text(size = 12))
   
