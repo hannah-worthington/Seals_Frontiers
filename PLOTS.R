@@ -98,6 +98,7 @@ ggplot() +
                  colour = 'black',
                  binwidth = 1,
                  alpha = 0.2) +
+  labs(y = 'beta') +
   geom_ribbon(data = beta.plot,
               mapping = aes(x = age,
                             ymin = beta.lower,
